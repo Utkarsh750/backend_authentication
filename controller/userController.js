@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const UserModel = require("../models/User");
+const sendEmailVerificationOTP = require("../utils/sendOTPVerifications");
 
 // User Registration
 const userRegistration = async (req, res) => {
@@ -43,6 +44,8 @@ const userRegistration = async (req, res) => {
       email,
       password: hashedPassword,
     }).save();
+
+    sendEmailVerificationOTP(req, newUser);
 
     // send success status
     res.status(200).json({

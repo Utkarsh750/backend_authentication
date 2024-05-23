@@ -1,8 +1,12 @@
 const { transporter } = require("../config/emailConfig");
+const EmailVerificationModel = require("../models/EmailVerification");
 
 const sendEmailVerificationOTP = async (req, user) => {
   // generate a random 4 digit number
   const otp = Math.floor(1000 + Math.random() * 9000);
+
+  // Save OTP in Database
+  await new EmailVerificationModel({ userId: user._id, otp: otp }).save();
 
   // OTP verification link
   const otpVerificationLink = `${process.env.FRONTEND_HOST}/account/verify-email`;
