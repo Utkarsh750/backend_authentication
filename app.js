@@ -7,10 +7,9 @@ const cors = require("cors");
 const passport = require("passport");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/connectDB");
-
+const userRoutes = require("./routes/userRoutes.js");
 
 const DATABASE_URL = process.env.DATABASE_URL;
-
 
 // for cors policy error
 const corsOptions = {
@@ -19,25 +18,22 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 
-
 // CORS middleware
 app.use(cors(corsOptions));
-
 
 // express middleware
 app.use(express.json());
 
-
 // COOKIE_PARSER middleware
 app.use(cookieParser());
-
 
 // passport middleware
 app.use(passport.initialize());
 
+// load routes
+app.use("/api/user", userRoutes);
 
 connectDB(DATABASE_URL);
-
 
 app.listen(port, (req, res) => {
   console.log(`Server is running on ${port}`);
