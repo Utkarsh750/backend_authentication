@@ -24,3 +24,4 @@ const sendEmailVerificationOTP = async (req, user) => {
 };
 
 module.exports = sendEmailVerificationOTP;
+
