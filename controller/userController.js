@@ -61,4 +61,8 @@ const userRegistration = async (req, res) => {
   }
 };
 
+const verifyEmail = async(req,res) => {
+  
+}
+
 module.exports = userRegistration;
