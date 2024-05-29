@@ -61,8 +61,31 @@ const userRegistration = async (req, res) => {
   }
 };
 
-const verifyEmail = async(req,res) => {
-  
-}
+const verifyEmail = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(500).json({
+        status: "false",
+        message: "All feilds are required",
+      });
+    }
+
+    const existingUser = await UserModel.findOne({ email });
+    if (!existingUser) {
+      return res.status(404).json({
+        status: "false",
+        message: "Email dones't exist",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "false",
+      message: "unable to verify email",
+    });
+  }
+};
 
 module.exports = userRegistration;
