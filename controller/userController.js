@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const UserModel = require("../models/User");
 const sendEmailVerificationOTP = require("../utils/sendOTPVerifications");
+const EmailVerificationModel = require("../models/EmailVerification");
 
 // User Registration
 const userRegistration = async (req, res) => {
@@ -60,32 +61,75 @@ const userRegistration = async (req, res) => {
     });
   }
 };
-
+// Email Verification
 const verifyEmail = async (req, res) => {
   try {
+    // extract from req body
     const { email, otp } = req.body;
 
     if (!email || !otp) {
       return res.status(500).json({
-        status: "false",
+        status: "failed",
         message: "All feilds are required",
       });
     }
 
+    // check if email is exist!
     const existingUser = await UserModel.findOne({ email });
+
+    // check if email doesn't exist
     if (!existingUser) {
       return res.status(404).json({
-        status: "false",
+        status: "failed",
         message: "Email dones't exist",
+      });
+    }
+
+    // check if email is already verified
+    if (existingUser.is_verified) {
+      return res.status(404).json({
+        status: "failed",
+        message: "Email is already verified",
+      });
+    }
+
+    // check if there is matching email verification OTP
+    const emailVerication = await EmailVerificationModel.findOne({
+      userId: existingUser._id,
+    });
+    if (!emailVerication) {
+      if (!existingUser.is_verified) {
+        await sendEmailVerificationOTP(req, existingUser);
+        return res.status(400).json({
+          status: "failed",
+          message: "Invalid OTP, new OTP send to your email",
+        });
+      }
+      return res.status(400).json({
+        status: "failed",
+        message: "Invalid OTP",
+      });
+    }
+
+    // Check if OTP is expired
+    const currentTime = new Date();
+    const expirationTime = new Date(
+      emailVerication.createdAt.getTime() + 15 * 60 * 1000
+    );
+    if (currentTime > expirationTime) {
+      await sendEmailVerificationOTP(req, existingUser);
+      return res.status(400).json({
+        status: "failed",
+        message: "OTP expired, new OTP sent to your email",
       });
     }
   } catch (error) {
     console.log(error);
     res.status(500).json({
-      status: "false",
+      status: "failed",
       message: "unable to verify email",
     });
   }
 };
 
-module.exports = userRegistration;
+module.exports = { userRegistration, verifyEmail };
