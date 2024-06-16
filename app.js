@@ -33,6 +33,7 @@ app.use(passport.initialize());
 // load routes
 app.use("/api/user", userRoutes);
 
+
 connectDB(DATABASE_URL);
 
 app.listen(port, (req, res) => {
