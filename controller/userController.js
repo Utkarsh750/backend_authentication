@@ -96,6 +96,7 @@ const verifyEmail = async (req, res) => {
     // check if there is matching email verification OTP
     const emailVerication = await EmailVerificationModel.findOne({
       userId: existingUser._id,
+      otp,
     });
     if (!emailVerication) {
       if (!existingUser.is_verified) {
@@ -105,6 +106,20 @@ const verifyEmail = async (req, res) => {
           message: "Invalid OTP, new OTP send to your email",
         });
       }
+
+      const currentTime = new Date();
+      const expirationTime = new Date(
+        emailVerication.createdAt.getTime() + 15 * 60 * 1000
+      );
+      if (currentTime > expirationTime) {
+        // OTP expired, send new OTP
+        await sendEmailVerificationOTP(req, existingUser);
+        res.status(400).json({
+          status: "failed",
+          message: "OTP expired, new OTP sent to your mail",
+        });
+      }
+
       return res.status(400).json({
         status: "failed",
         message: "Invalid OTP",
@@ -123,6 +138,17 @@ const verifyEmail = async (req, res) => {
         message: "OTP expired, new OTP sent to your email",
       });
     }
+
+    // OTP is valid and not expired, mark email is verified
+    existingUser.is_verified = true;
+    await existingUser.save();
+
+    // delete email verification document
+    await EmailVerificationModel.deleteMany({ userId: existingUser._id });
+    res.status(200).json({
+      status: "success",
+      message: "Email verified succefully",
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({
