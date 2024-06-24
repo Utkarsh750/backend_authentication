@@ -11,7 +11,6 @@ const sendEmailVerificationOTP = async (req, user) => {
   // OTP verification link
   const otpVerificationLink = `${process.env.FRONTEND_HOST}/account/verify-email`;
   
-  
 
   await transporter.sendMail({
     from: process.env.EMAIL_FROM,
