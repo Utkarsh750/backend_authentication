@@ -157,5 +157,58 @@ const verifyEmail = async (req, res) => {
     });
   }
 };
+// User Login
+const userLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      res.status(400).json({
+        status: "failed",
+        message: "Email and Password are required",
+      });
+    }
+
+    // find user by email
+    const user = await UserModel.findOne({ email });
+
+    // check if user found
+    if (!user) {
+      res.status(400).json({
+        status: "failed",
+        message: "User not found",
+      });
+    }
+
+    // check if user exists
+    if (!user.is_verified) {
+      res.status(401).json({
+        status: "failed",
+        message: "your account is not verified",
+      });
+    }
+
+    // comapre password / check password
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      res.status(401).json({
+        status: "failed",
+        message: "Invalid email and password",
+      });
+    }
+
+    // Generate Tokens
+
+    // Set Cookies
+
+    // Send success response with Tokens
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "failed",
+      message: "Unable to login",
+    });
+  }
+};
 
 module.exports = { userRegistration, verifyEmail };
