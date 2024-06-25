@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const UserModel = require("../models/User");
 const sendEmailVerificationOTP = require("../utils/sendOTPVerifications");
 const EmailVerificationModel = require("../models/EmailVerification");
+const generateTokens = require("../utils/generateTokens");
 
 // User Registration
 const userRegistration = async (req, res) => {
@@ -198,10 +199,25 @@ const userLogin = async (req, res) => {
     }
 
     // Generate Tokens
-
+    const { accessTokens, accessTokensExp, refreshTokens, refreshTokenExp } =
+      await generateTokens(user);
     // Set Cookies
 
     // Send success response with Tokens
+    res.status(200).json({
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        roles: user.roles[0],
+      },
+      status: "success",
+      message: "Login successfull",
+      access_token: accessTokens,
+      refresh_token: refreshTokens,
+      access_token_exp: accessTokensExp,
+      is_auth: true,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({
