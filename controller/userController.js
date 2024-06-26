@@ -1,8 +1,9 @@
 const bcrypt = require("bcrypt");
 const UserModel = require("../models/User");
-const sendEmailVerificationOTP = require("../utils/sendOTPVerifications");
-const EmailVerificationModel = require("../models/EmailVerification");
-const generateTokens = require("../utils/generateTokens");
+const sendEmailVerificationOTP = require("../utils/sendOTPVerifications.js");
+const EmailVerificationModel = require("../models/EmailVerification.js");
+const generateTokens = require("../utils/generateTokens.js");
+const setTokenCookies = require("../utils/setTokenCookies.js");
 
 // User Registration
 const userRegistration = async (req, res) => {
@@ -162,48 +163,51 @@ const verifyEmail = async (req, res) => {
 const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
-
+    // Check if email and password are provided
     if (!email || !password) {
-      res.status(400).json({
-        status: "failed",
-        message: "Email and Password are required",
-      });
+      return res
+        .status(400)
+        .json({ status: "failed", message: "Email and password are required" });
     }
-
-    // find user by email
+    // Find user by email
     const user = await UserModel.findOne({ email });
 
-    // check if user found
+    // Check if user exists
     if (!user) {
-      res.status(400).json({
-        status: "failed",
-        message: "User not found",
-      });
+      return res
+        .status(404)
+        .json({ status: "failed", message: "Invalid Email or Password" });
     }
 
-    // check if user exists
+    // Check if user exists
     if (!user.is_verified) {
-      res.status(401).json({
-        status: "failed",
-        message: "your account is not verified",
-      });
+      return res
+        .status(401)
+        .json({ status: "failed", message: "Your account is not verified" });
     }
 
-    // comapre password / check password
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
-    if (!isPasswordMatch) {
-      res.status(401).json({
-        status: "failed",
-        message: "Invalid email and password",
-      });
+    // Compare passwords / Check Password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ status: "failed", message: "Invalid email or password" });
     }
 
-    // Generate Tokens
-    const { accessTokens, accessTokensExp, refreshTokens, refreshTokenExp } =
+    // Generate tokens
+    const { accessToken, refreshToken, accessTokenExp, refreshTokenExp } =
       await generateTokens(user);
-    // Set Cookies
 
-    // Send success response with Tokens
+    // Set Cookies
+    setTokenCookies(
+      res,
+      accessToken,
+      refreshToken,
+      accessTokenExp,
+      refreshTokenExp
+    );
+
+    // Send success response with tokens
     res.status(200).json({
       user: {
         id: user._id,
@@ -212,19 +216,19 @@ const userLogin = async (req, res) => {
         roles: user.roles[0],
       },
       status: "success",
-      message: "Login successfull",
-      access_token: accessTokens,
-      refresh_token: refreshTokens,
-      access_token_exp: accessTokensExp,
+      message: "Login successful",
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      access_token_exp: accessTokenExp,
       is_auth: true,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       status: "failed",
-      message: "Unable to login",
+      message: "Unable to login, please try again later",
     });
   }
 };
 
-module.exports = { userRegistration, verifyEmail };
+module.exports = { userRegistration, verifyEmail, userLogin };

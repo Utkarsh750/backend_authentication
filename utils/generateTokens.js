@@ -1,47 +1,46 @@
 const jwt = require("jsonwebtoken");
 const UserRefreshTokenModel = require("../models/userRefreshTokens.js");
 
-const generateTokens = async (req, res) => {
+const generateTokens = async (user) => {
   try {
     const payload = { _id: user._id, roles: user.roles };
 
-    // Generate access token with expire times
-    const accessTokensExp = Math.floor(Date.now() / 1000) + 100; // set expiration to 100 seconds from now
-
-    const accessTokens = jwt.sign(
-      {
-        ...payload,
-        exp: accessTokensExp,
-      },
+    // Generate access token with expiration time
+    const accessTokenExp = Math.floor(Date.now() / 1000) + 100; // Set expiration to 100 seconds from now
+    const accessToken = jwt.sign(
+      { ...payload, exp: accessTokenExp },
       process.env.JWT_ACCESS_TOKEN_SECRET_KEY
+      // { expiresIn: '10s' }
     );
 
-    //   Generate refresh token with expiration time
-    const refreshTokenExp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 5; // set expiration to 100 seconds from now
-
-    const refreshTokens = jwt.sign(
-      {
-        ...payload,
-        exp: accessTokensExp,
-      },
+    // Generate refresh token with expiration time
+    const refreshTokenExp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 5; // Set expiration to 5 days from now
+    const refreshToken = jwt.sign(
+      { ...payload, exp: refreshTokenExp },
       process.env.JWT_REFRESH_TOKEN_SECRET_KEY
+      // { expiresIn: '5d' }
     );
 
-    const userRefreshToken = await UserRefreshTokenModel.findOne({
+    const userRefreshToken = await UserRefreshTokenModel.findOneAndDelete({
       userId: user._id,
     });
 
-    if (userRefreshToken) await userRefreshToken.remove();
+    //  // if want to blacklist rather than remove then use below code
+    // if (userRefreshToken) {
+    //   userRefreshToken.blacklisted = true;
+    //   await userRefreshToken.save();
+    // }
 
-    // save new access & refresh token
+    // Save New Refresh Token
     await new UserRefreshTokenModel({
       userId: user._id,
-      token: refreshTokens,
+      token: refreshToken,
     }).save();
+
     return Promise.resolve({
-      accessTokens,
-      accessTokensExp,
-      refreshTokens,
+      accessToken,
+      refreshToken,
+      accessTokenExp,
       refreshTokenExp,
     });
   } catch (error) {
