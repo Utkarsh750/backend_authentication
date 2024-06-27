@@ -9,7 +9,6 @@ const setTokenCookies = require("../utils/setTokenCookies.js");
 const userRegistration = async (req, res) => {
   try {
     // extract from body parameter
-
     const { name, email, password, password_confirmation } = req.body;
 
     // check if all fields are provided
@@ -227,6 +226,27 @@ const userLogin = async (req, res) => {
     res.status(500).json({
       status: "failed",
       message: "Unable to login, please try again later",
+    });
+  }
+};
+// Get new access token & refresh token
+const getNewAccessToken = (req, res) => {
+  try {
+    // Get New Access Token using refresh token
+
+    // Set New Tokens to Cookie
+    setTokenCookies(
+      res,
+      accessToken,
+      refreshToken,
+      accessTokenExp,
+      refreshTokenExp
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "failed",
+      message: "Unable to generate new Tokens, please try again",
     });
   }
 };
