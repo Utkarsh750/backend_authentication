@@ -230,18 +230,32 @@ const userLogin = async (req, res) => {
   }
 };
 // Get new access token & refresh token
-const getNewAccessToken = (req, res) => {
+const getNewAccessToken = async (req, res) => {
   try {
-    // Get New Access Token using refresh token
+    // Get new access token using Refresh Token
+    const {
+      newAccessToken,
+      newRefreshToken,
+      newAccessTokenExp,
+      newRefreshTokenExp,
+    } = await refreshAccessToken(req, res);
 
     // Set New Tokens to Cookie
     setTokenCookies(
       res,
-      accessToken,
-      refreshToken,
-      accessTokenExp,
-      refreshTokenExp
+      newAccessToken,
+      newRefreshToken,
+      newAccessTokenExp,
+      newRefreshTokenExp
     );
+
+    res.status(200).send({
+      status: "success",
+      message: "New tokens generated",
+      access_token: newAccessToken,
+      refresh_token: newRefreshToken,
+      access_token_exp: newAccessTokenExp,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({
