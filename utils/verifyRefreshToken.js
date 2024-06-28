@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const UserRefreshTokenModel = require("../models/userRefreshTokens");
 
-const VerifyRefreshToken = async (req,res) => {
+const VerifyRefreshToken = async (refreshToken) => {
     try {
         const privateKey = process.env.JWT_REFRESH_TOKEN_SECRET_KEY;
     

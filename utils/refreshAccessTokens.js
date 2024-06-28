@@ -1,5 +1,6 @@
+const UserModel = require("../models/User.js");
 const UserRefreshTokenModel = require("../models/userRefreshTokens");
-const VerifyRefreshToken = require("./verifyRefreshToken");
+const VerifyRefreshToken = require("./verifyRefreshToken.js");
 
 const refreshAccessToken = async (req, res) => {
   try {
@@ -21,7 +22,7 @@ const refreshAccessToken = async (req, res) => {
         .send({ status: "failed", message: "User not found" });
     }
 
-    const userRefreshToken = await UserRefreshTokenModelel.findOne({
+    const userRefreshToken = await UserRefreshTokenModel.findOne({
       userId: tokenDetails._id,
     });
 

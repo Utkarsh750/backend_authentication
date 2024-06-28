@@ -4,6 +4,7 @@ const sendEmailVerificationOTP = require("../utils/sendOTPVerifications.js");
 const EmailVerificationModel = require("../models/EmailVerification.js");
 const generateTokens = require("../utils/generateTokens.js");
 const setTokenCookies = require("../utils/setTokenCookies.js");
+const refreshAccessToken = require("../utils/refreshAccessTokens.js");
 
 // User Registration
 const userRegistration = async (req, res) => {
@@ -264,5 +265,15 @@ const getNewAccessToken = async (req, res) => {
     });
   }
 };
+// Profile or Logged in User
+const userProfile = async (req, res) => {
+  res.send({ user: req.user });
+};
 
-module.exports = { userRegistration, verifyEmail, userLogin };
+module.exports = {
+  userRegistration,
+  verifyEmail,
+  userLogin,
+  getNewAccessToken,
+  userProfile
+};
