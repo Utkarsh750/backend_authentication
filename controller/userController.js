@@ -5,6 +5,7 @@ const EmailVerificationModel = require("../models/EmailVerification.js");
 const generateTokens = require("../utils/generateTokens.js");
 const setTokenCookies = require("../utils/setTokenCookies.js");
 const refreshAccessToken = require("../utils/refreshAccessTokens.js");
+const UserRefreshTokenModel = require("../models/userRefreshTokens.js");
 
 // User Registration
 const userRegistration = async (req, res) => {
@@ -269,11 +270,45 @@ const getNewAccessToken = async (req, res) => {
 const userProfile = async (req, res) => {
   res.send({ user: req.user });
 };
+// User log out
+const userLogout = async (req, res) => {
+  try {
+    // Optionally you ca nblacklist the refresh token in Database
+    const refreshToken = req.cookies.refreshToken;
+    await UserRefreshTokenModel.findOneAndUpdate(
+      {
+        token: refreshToken,
+      },
+      {
+        $set: { blacklisted: true },
+      }
+    );
+
+    // Clear access Token and Refresh token cooies
+    res.clearCookie("accessToekn");
+    res.clearCookie("refreshToken");
+    res.clearCookie("is_auth");
+
+    res.status(200).json({
+      status: "success",
+      message: "Logout Successful",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "failed",
+      message: "Unable to logout, please try again later",
+    });
+  }
+};
+// Password Change
+
 
 module.exports = {
   userRegistration,
   verifyEmail,
   userLogin,
   getNewAccessToken,
-  userProfile
+  userProfile,
+  userLogout,
 };

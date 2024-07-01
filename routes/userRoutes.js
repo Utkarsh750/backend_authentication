@@ -6,6 +6,7 @@ const {
   userLogin,
   getNewAccessToken,
   userProfile,
+  userLogout,
 } = require("../controller/userController.js");
 const accessTokenAutoRefresh = require("../middleware/setAccessTokenAutoRefresh.js");
 const router = express.Router();
@@ -24,6 +25,14 @@ router.get(
     session: false,
   }),
   userProfile
+);
+router.post(
+  "/logout",
+  accessTokenAutoRefresh,
+  passport.authenticate("jwt", {
+    session: false,
+  }),
+  userLogout
 );
 
 module.exports = router;
