@@ -8,6 +8,7 @@ const passport = require("passport");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/connectDB");
 const userRoutes = require("./routes/userRoutes.js");
+require("./config/passport-jwt-strategy.js");
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
@@ -32,7 +33,6 @@ app.use(passport.initialize());
 
 // load routes
 app.use("/api/user", userRoutes);
-
 
 connectDB(DATABASE_URL);
 

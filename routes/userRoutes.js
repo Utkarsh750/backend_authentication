@@ -1,4 +1,5 @@
 const express = require("express");
+const passport = require("passport");
 const {
   userRegistration,
   verifyEmail,
@@ -15,6 +16,12 @@ router.post("/login", userLogin);
 router.post("/refresh-token", getNewAccessToken);
 
 // Protected routes
-router.get("/me", userProfile);
+router.get(
+  "/me",
+  passport.authenticate("jwt", {
+    session: false,
+  }),
+  userProfile
+);
 
 module.exports = router;
