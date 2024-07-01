@@ -7,6 +7,7 @@ const {
   getNewAccessToken,
   userProfile,
 } = require("../controller/userController.js");
+const accessTokenAutoRefresh = require("../middleware/setAccessTokenAutoRefresh.js");
 const router = express.Router();
 
 // Public routes
@@ -18,6 +19,7 @@ router.post("/refresh-token", getNewAccessToken);
 // Protected routes
 router.get(
   "/me",
+  accessTokenAutoRefresh,
   passport.authenticate("jwt", {
     session: false,
   }),

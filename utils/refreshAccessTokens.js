@@ -1,5 +1,6 @@
 const UserModel = require("../models/User.js");
-const UserRefreshTokenModel = require("../models/userRefreshTokens");
+const UserRefreshTokenModel = require("../models/userRefreshTokens.js");
+const generateTokens = require("./generateTokens.js");
 const VerifyRefreshToken = require("./verifyRefreshToken.js");
 
 const refreshAccessToken = async (req, res) => {
