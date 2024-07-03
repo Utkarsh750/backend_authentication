@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const UserModel = require("../models/User");
 const sendEmailVerificationOTP = require("../utils/sendOTPVerifications.js");
 const EmailVerificationModel = require("../models/EmailVerification.js");
@@ -6,6 +7,7 @@ const generateTokens = require("../utils/generateTokens.js");
 const setTokenCookies = require("../utils/setTokenCookies.js");
 const refreshAccessToken = require("../utils/refreshAccessTokens.js");
 const UserRefreshTokenModel = require("../models/userRefreshTokens.js");
+const transporter = require("../config/emailConfig.js");
 
 // User Registration
 const userRegistration = async (req, res) => {
@@ -302,7 +304,89 @@ const userLogout = async (req, res) => {
   }
 };
 // Password Change
+const changePassword = async (req, res) => {
+  try {
+    const { password, password_confirmation } = req.body;
 
+    if (!password || !password_confirmation) {
+      return res.status(400).json({
+        status: "failed",
+        message: "New Password & Confirm New Password are required",
+      });
+    }
+    if (password !== password_confirmation) {
+      return res.status(400).json({
+        status: "failed",
+        message: "New Password & Confirm New Password do not match",
+      });
+    }
+
+    // Generate salt & hash password
+    const salt = await bcrypt.genSalt(10);
+    const newHashPassword = await bcrypt.hash(password, salt);
+
+    // Update user's password
+    await UserModel.findByIdAndUpdate(req.user._id, {
+      $set: { password: newHashPassword },
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: "Password changed succuessfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "failed",
+      message: "Unable to change password, please try again later",
+    });
+  }
+};
+// send Password reset via link email
+const sendUserPasswordResetEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    // Check if email is provided
+    if (!email) {
+      return res
+        .status(400)
+        .json({ status: "failed", message: "Email field is required" });
+    }
+    // Find user by email
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ status: "failed", message: "Email doesn't exist" });
+    }
+    // Generate token for password reset
+    const secret = user._id + process.env.JWT_ACCESS_TOKEN_SECRET_KEY;
+    const token = jwt.sign({ userID: user._id }, secret, {
+      expiresIn: "15m",
+    });
+    // Reset Link
+    const resetLink = `${process.env.FRONTEND_HOST}/account/reset-password-confirm/${user._id}/${token}`;
+    console.log(resetLink);
+    // Send password reset email
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM,
+      to: user.email,
+      subject: "Password Reset Link",
+      html: `<p>Hello ${user.name},</p><p>Please <a href="${resetLink}">click here</a> to reset your password.</p>`,
+    });
+    // Send success response
+    res.status(200).json({
+      status: "success",
+      message: "Password reset email sent. Please check your email.",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "failed",
+      message: "Unable to send password email, please try again later",
+    });
+  }
+};
 
 module.exports = {
   userRegistration,
@@ -311,4 +395,6 @@ module.exports = {
   getNewAccessToken,
   userProfile,
   userLogout,
+  changePassword,
+  sendUserPasswordResetEmail,
 };

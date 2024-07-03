@@ -7,6 +7,8 @@ const {
   getNewAccessToken,
   userProfile,
   userLogout,
+  changePassword,
+  sendUserPasswordResetEmail,
 } = require("../controller/userController.js");
 const accessTokenAutoRefresh = require("../middleware/setAccessTokenAutoRefresh.js");
 const router = express.Router();
@@ -16,6 +18,7 @@ router.post("/register", userRegistration);
 router.post("/verify-email", verifyEmail);
 router.post("/login", userLogin);
 router.post("/refresh-token", getNewAccessToken);
+router.post("/reset-password-link", sendUserPasswordResetEmail);
 
 // Protected routes
 router.get(
@@ -26,6 +29,15 @@ router.get(
   }),
   userProfile
 );
+router.post(
+  "/change-password",
+  accessTokenAutoRefresh,
+  passport.authenticate("jwt", {
+    session: false,
+  }),
+  changePassword
+);
+
 router.post(
   "/logout",
   accessTokenAutoRefresh,
