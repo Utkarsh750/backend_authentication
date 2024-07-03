@@ -9,6 +9,7 @@ const {
   userLogout,
   changePassword,
   sendUserPasswordResetEmail,
+  userPasswordReset,
 } = require("../controller/userController.js");
 const accessTokenAutoRefresh = require("../middleware/setAccessTokenAutoRefresh.js");
 const router = express.Router();
@@ -19,6 +20,7 @@ router.post("/verify-email", verifyEmail);
 router.post("/login", userLogin);
 router.post("/refresh-token", getNewAccessToken);
 router.post("/reset-password-link", sendUserPasswordResetEmail);
+router.post("/reset-password/:id/:token", userPasswordReset);
 
 // Protected routes
 router.get(
